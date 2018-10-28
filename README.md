@@ -6,7 +6,7 @@ php-db-lib is a library with an ease of use SQL builder with functionality such 
 - Conditioning with any type of AND & OR complexity
 - Data being returned as a multidimensional associative array
 
-All that, while keeping performance on the top, by creating a tree-structure of the database and saved to a file to prevent overhead
+All that, while keeping performance on the top, by creating a tree-structure of the database and saved to a file
 
 ### Examples:
 Consider the following tables:
