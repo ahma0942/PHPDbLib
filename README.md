@@ -1,5 +1,5 @@
 # php-db-lib (v0.1-alpha)
-php-db-lib is a library with an easy of use SQL builder with functionality such as:
+php-db-lib is a library with an ease of use SQL builder with functionality such as:
 
 - Automatic nested inner joins (any types of complexity)
 - Selecting & Unselecting columns (from joined tables too)
