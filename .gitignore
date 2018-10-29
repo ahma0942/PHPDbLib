@@ -1,3 +1,4 @@
-db
+PHPDbLib/#db/*
+!PHPDbLib/#db/.htaccess
 .DS_Store
 .idea
