@@ -1,4 +1,6 @@
 <?php
+namespace PHPDbLib\Database;
+
 class Table {
 	public $name;
 	public $columns=[];
@@ -129,12 +131,12 @@ class Table {
 		$this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
 	}
 
-	public function create(Connection $conn)
+	public function create(mysqli $conn)
 	{
 		throw new Exception("Not implemented");
 	}
 
-	public function read(Connection $conn)
+	public function read(mysqli $conn)
 	{
 		$output=[];
 		try{
@@ -168,7 +170,7 @@ class Table {
 			//WHERE
 			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
 			if(isset($this->stack['where'])){
-				$table=$conn->conn()->prepare($sql);
+				$table=$conn->prepare($sql);
 				$types=['integer'=>'i','double'=>'d','string'=>'s'];
 				$bind=[''];
 				foreach($this->stack['where'] AS $w) {
@@ -179,7 +181,7 @@ class Table {
 				$table->execute();
 				$table=$table->get_result();
 			}
-			else $table=$conn->conn()->query($sql);
+			else $table=$conn->query($sql);
 
 			$i=-1;
 			while($row=$table->fetch_assoc()){
@@ -204,37 +206,12 @@ class Table {
 		return $output;
 	}
 
-	private function recursiveOutputHandler(&$arr,&$fields,&$tables,$initial=false)
-	{
-		$out=[];
-		if($initial){
-			for($i=0;$i<=sizeof($this->columns); $i++){
-				$inTable=false;
-				foreach($tables as $table=>$children){
-					if($this->keys[$table][0]==$fields[$i]->name){
-						$inTable=$table;
-						break;
-					}
-					if($inTable!==false) $out[$fields[$i]->name]=$this->recursiveOutputHandler($arr,$fields,$tables[$inTable]);
-					else $out[$fields[$i]->name]=$arr[$i];
-				}
-			}
-		}
-		else{
-			//TODO: FIND LOGIC FOR THIS!!!!
-			$ini=sizeof($this->columns);
-//			foreach($this->stack['joined_tables']['tables']
-		}
-
-		return $out;
-	}
-
-	public function update(Connection $conn)
+	public function update(mysqli $conn)
 	{
 		throw new Exception("Not implemented");
 	}
 
-	public function delete(Connection $conn)
+	public function delete(mysqli $conn)
 	{
 		throw new Exception("Not implemented");
 	}
