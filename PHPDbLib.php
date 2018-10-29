@@ -12,10 +12,10 @@ class PHPDbLib {
 	{
 	    $this->db=$dbname;
 		$this->connection = new mysqli($config['host'],$config['user'],$config['pass'],$dbname);
-        @$tables=file_get_contents("#db/$dbname");
+        @$tables=file_get_contents(__DIR__."/#db/$dbname");
         if($tables===false) {
             $tables=$this->CreateObjectFromDatabase();
-            file_put_contents("#db/$dbname",serialize($tables));
+            file_put_contents(__DIR__."/#db/$dbname",serialize($tables));
         }
         else $tables=unserialize($tables);
 
