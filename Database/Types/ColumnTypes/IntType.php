@@ -2,9 +2,11 @@
 namespace PHPDbLib\Database\Types\ColumnTypes;
 
 class IntType extends NumberType {
-    public $ai=false;
+    protected $ai=false;
 
-    public function AutoIncrement(){
+    public function autoIncrement(){
         $this->ai=true;
+        $this->primary=true;
+        return $this;
     }
 }
