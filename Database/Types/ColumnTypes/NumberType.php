@@ -2,10 +2,11 @@
 namespace PHPDbLib\Database\Types\ColumnTypes;
 
 class NumberType extends ColumnType {
-    public $unsigned=false;
+    protected $unsigned=false;
 
-    public function Unsigned()
+    public function unsigned()
     {
         $this->unsigned=true;
+        return $this;
     }
 }

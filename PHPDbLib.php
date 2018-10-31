@@ -34,7 +34,9 @@ class PHPDbLib {
 
     public function table($table)
     {
-        return $this->tableExist($table)?new TableExistHandler($this->tables[$table],$this->connection):new TableNotExistHandler($table);
+        if($this->tableExist($table)) return new TableExistHandler($table,$this->tables,$this->connection);
+        $this->tables[$table]=[];
+        return new TableNotExistHandler($table,$this->tables,$this->connection);
     }
 
     public function tableExist($table)
