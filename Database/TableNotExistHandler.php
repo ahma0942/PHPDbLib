@@ -15,12 +15,14 @@ class TableNotExistHandler {
     private $table;
     private $tables;
     private $connection;
+    private $db;
 
-    function __construct($table,$tables,$connection)
+    function __construct($table,$tables,$connection,$db)
     {
         $this->table=$table;
         $this->tables=$tables;
         $this->connection=$connection;
+        $this->db=$db;
     }
 
     public function create($callable)
@@ -28,16 +30,21 @@ class TableNotExistHandler {
         $dbt=new DatabaseTypes();
         $callable($dbt);
         $keys=[];
+        $cols=[];
+        $foreigns=[];
         $sql="";
         foreach($dbt->getStack() as $obj){
             $arr=$obj->getObjectVars();
-            $sql.=$arr['name']." ".$arr['type'];
+            $cols[]=$arr['name'];
+            $sql.='`'.$arr['name']."` ".$arr['type'];
 
             if($obj instanceof DecimalType){
                 $sql.="({$arr['length']},{$arr['precision']})";
             }
             elseif($obj instanceof ListType){
-                $sql.="('".implode("','",$arr['list'])."')";
+                $sql.="(";
+                foreach($arr['list'] as $val) $sql.="'".mysqli_real_escape_string($this->connection,$val)."',";
+                $sql=rtrim($sql,',').")";
             }
             elseif($obj instanceof ColumnType){
                 if(!($obj instanceof NoLengthType)) $sql.="({$arr['length']})";
@@ -68,9 +75,10 @@ class TableNotExistHandler {
             elseif($key=='foreign'){
                 foreach($args as $col=>$arr){
                     list($table,$column)=explode('.',$arr[0]);
-                    $sql.="FOREIGN KEY fk_$col($col) REFERENCES $table($column)";
+                    $sql.="FOREIGN KEY fk_$col(`$col`) REFERENCES `$table`(`$column`)";
                     $sql.=" ON DELETE ".ForeignKeyOptions::getValue($arr[1]);
                     $sql.=" ON UPDATE ".ForeignKeyOptions::getValue($arr[2]).",";
+                    $foreigns[$col]=[$this->table,$table,$column];
                 }
             }
             elseif($key=='index'){
@@ -85,6 +93,15 @@ class TableNotExistHandler {
             elseif($key=='unique') $sql.='UNIQUE(`'.implode('`,`',$args).'`),';
         }
         $sql=rtrim($sql,',');
-        echo $sql;
+        $table=new Table($this->table);
+        $table->setColumns($cols);
+        $table->setForeignKeys($foreigns);
+        $this->tables[$this->table]=$table;
+        try{
+            $this->tables[$this->table]->create($this->connection,$sql);
+        } catch (\Exception $e){
+            die($e->getMessage());
+        }
+        file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
     }
 }
