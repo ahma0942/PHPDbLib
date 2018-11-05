@@ -51,7 +51,7 @@ class Table {
 				$sql.=($firstO?$firstO=false:' OR ').$this->_create_nested_where_sql($statement);
 			}
 			else{
-				if(!isset($this->stack['selects'][$statement[0]])) throw new Exception("Cannot find column '{$statement[0]}' in where clause.");
+				if(!isset($this->stack['selects'][$statement[0]])) throw new \Exception("Cannot find column '{$statement[0]}' in where clause.");
 				$sql.=($firstA?$firstA=false:' AND ')."{$this->stack['selects'][$statement[0]]}".$statement[1].'?';
 				$this->stack['where'][]=$statement[2];
 			}
@@ -65,7 +65,7 @@ class Table {
 		try{
 			if(!is_array($arr)){
 				$rand=rand();
-				if(!isset($this->keys[$arr])) throw new Exception("No foreign key reference found for table '$arr'");
+				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for table '$arr'");
 				$tab=$this->keys[$arr];
 				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$arr,$tab[1]->name,$tab[2],$rand);
 				$this->_create_select_array([$arr=>$rand],$this);
@@ -73,7 +73,7 @@ class Table {
 			elseif(is_array($arr)){
 				$this->_create_nested_join_sql('_ref_'.$this->name.'_ref',$arr,$this);
 			}
-		} catch (Exception $e){
+		} catch (\Exception $e){
 			die($e->getMessage());
 		}
 
@@ -91,7 +91,7 @@ class Table {
 				$this->_create_nested_join_sql($last,$t,$tab,$select);
 			}
 			else{
-				if(!isset($tab->keys[$t])) throw new Exception("No foreign key reference found for table '$t'");
+				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for table '$t'");
 				$select[]=$t;
 				$this->_create_select_array([$t=>$rand],$tab,implode('.',$select));
 				unset($this->stack['selects'][implode('.',$select)]);
@@ -131,12 +131,14 @@ class Table {
 		$this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
 	}
 
-	public function create(mysqli $conn)
+	public function create(\mysqli $conn, string $sql)
 	{
-		throw new Exception("Not implemented");
+	    $sql="CREATE TABLE `".$this->name."`(\n$sql\n)";
+		$conn->query($sql);
+		if($conn->error) throw new \Exception($conn->error);
 	}
 
-	public function read(mysqli $conn)
+	public function read(\mysqli $conn)
 	{
 		$output=[];
 		try{
@@ -149,7 +151,7 @@ class Table {
 			if(!isset($this->stack['select']) || empty($this->stack['select'])){
 				if(isset($this->stack['unselect']) && !empty($this->stack['unselect'])){
 					foreach($this->stack['unselect'] as $sel) {
-						if(!isset($this->stack['selects'][$sel])) throw new Exception("Cannot unselect column '$sel'. Column not found.");
+						if(!isset($this->stack['selects'][$sel])) throw new \Exception("Cannot unselect column '$sel'. Column not found.");
 						unset($this->stack['selects'][$sel]);
 					}
 				}
@@ -157,7 +159,7 @@ class Table {
 			}
 			else{
 				foreach($this->stack['select'] as $sel) {
-					if(!isset($this->stack['selects'][$sel])) throw new Exception("Cannot select column '$sel'. Column not found.");
+					if(!isset($this->stack['selects'][$sel])) throw new \Exception("Cannot select column '$sel'. Column not found.");
 					$sql.=$this->stack['selects'][$sel]." AS `$sel`,";
 				}
 			}
@@ -198,7 +200,7 @@ class Table {
 					else $output[$i][$k]=$v;
 				}
 			}
-		} catch(Exception $e){
+		} catch(\Exception $e){
 			die($e->getMessage());
 		}
 
@@ -206,13 +208,13 @@ class Table {
 		return $output;
 	}
 
-	public function update(mysqli $conn)
+	public function update(\mysqli $conn)
 	{
-		throw new Exception("Not implemented");
+		throw new \Exception("Not implemented");
 	}
 
-	public function delete(mysqli $conn)
+	public function delete(\mysqli $conn)
 	{
-		throw new Exception("Not implemented");
+		throw new \Exception("Not implemented");
 	}
 }
