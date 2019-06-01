@@ -1,4 +1,4 @@
-# PHPDbLib (v0.1-alpha)
+# PHPDbLib (Beta-V1.0)
 PHPDbLib is a library with an ease of use SQL builder with functionality such as:
 
 - Automatic nested inner joins (any types of complexity)
