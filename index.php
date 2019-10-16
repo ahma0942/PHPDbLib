@@ -1,5 +1,5 @@
 <?php
-include "PHPDbLib/PHPDbLib.php";
+include "PHPDbLib.php";
 
 use PHPDbLib\Database\Types\DatabaseTypes;
 use PHPDbLib\Database\Types\Enums\ForeignKeyOptions;
@@ -8,15 +8,16 @@ spl_autoload_register(function($class) {
 	if(file_exists(str_replace('\\','/',__DIR__."/$class.php"))) include str_replace('\\','/',__DIR__."/$class.php");
 });
 
-$config=[
+$config = [
 	'host'=>'localhost',
 	'user'=>'root',
 	'pass'=>'',
 ];
 
-$db = new PHPDbLib($config,'test');
+$db = new PHPDbLib($config, 'test');
 print_r($db->read('messages'));
-exit;
+
+/*
 
 if($db->table('users')) $db->delete('users');
 
@@ -41,8 +42,6 @@ if(!$db->table('messages')){
 $db->execute();
 //$db->insert('users')->assoc(["username","password"],["131","Test1234"]);
 print_r($db->table('messages')->join('user_id')->read());
-
-/*
 print_r($db->table('test')->join('test2_id')->read());
 print_r($db->table('test')->join(['test2_id','test3_id'])->read());
 print_r($db->table('test')->join([['test2_id'],['test3_id']])->read());
