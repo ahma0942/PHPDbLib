@@ -8,26 +8,34 @@ use PHPDbLib\Database\Types\ColumnTypes\IntType;
 use PHPDbLib\Database\Types\ColumnTypes\ListType;
 use PHPDbLib\Database\Types\ColumnTypes\NoLengthType;
 use PHPDbLib\Database\Types\ColumnTypes\NumberType;
-use PHPDbLib\Database\Types\DatabaseTypes;
 use PHPDbLib\Database\Types\Enums\ForeignKeyOptions;
+use PHPDbLib\Database\Types\DatabaseTypes;
 
-class TableNotExistHandler {
-    private $table;
-    private $tables;
-    private $connection;
-    private $db;
+class Database {
+	public $tables;
+	public $connection;
+	public $db;
+	public $sql;
 
-    function __construct($table,$tables,$connection,$db)
-    {
-        $this->table=$table;
-        $this->tables=$tables;
-        $this->connection=$connection;
-        $this->db=$db;
-    }
+	function __construct($tables, $conn, $db)
+	{
+		$this->tables=$tables;
+		$this->connection=$conn;
+		$this->db=$db;
+	}
 
-    public function create($callable)
-    {
-        $dbt=new DatabaseTypes();
+	public function delete($table)
+	{
+		if (isset($this->tables[$table])) {
+			$this->sql = "DROP TABLE IF EXISTS `$table`;\n";
+			unset($this->tables[$table]);
+			$this->execute();
+		}
+	}
+
+	public function create($the_table, $callable)
+	{
+		$dbt=new DatabaseTypes();
         $callable($dbt);
         $keys=[];
         $cols=[];
@@ -36,7 +44,7 @@ class TableNotExistHandler {
         foreach($dbt->getStack() as $obj){
             $arr=$obj->getObjectVars();
             $cols[]=$arr['name'];
-            $sql.='`'.$arr['name']."` ".$arr['type'];
+			$sql.='`'.$arr['name']."` ".$arr['type'];
 
             if($obj instanceof DecimalType){
                 $sql.="({$arr['length']},{$arr['precision']})";
@@ -47,7 +55,7 @@ class TableNotExistHandler {
                 $sql=rtrim($sql,',').")";
             }
             elseif($obj instanceof ColumnType){
-                if(!($obj instanceof NoLengthType)) $sql.="({$arr['length']})";
+				if(!($obj instanceof NoLengthType)) $sql.="({$arr['length']})";
             }
 
             if($obj instanceof AsciiType){
@@ -78,7 +86,7 @@ class TableNotExistHandler {
                     $sql.="FOREIGN KEY fk_$col(`$col`) REFERENCES `$table`(`$column`)";
                     $sql.=" ON DELETE ".ForeignKeyOptions::getValue($arr[1]);
                     $sql.=" ON UPDATE ".ForeignKeyOptions::getValue($arr[2]).",";
-                    $foreigns[$col]=[$this->table,$table,$column];
+                    $foreigns[$col]=[$the_table,$table,$column];
                 }
             }
             elseif($key=='index'){
@@ -93,15 +101,29 @@ class TableNotExistHandler {
             elseif($key=='unique') $sql.='UNIQUE(`'.implode('`,`',$args).'`),';
         }
         $sql=rtrim($sql,',');
-        $table=new Table($this->table);
+        $table=new Table($the_table);
         $table->setColumns($cols);
         $table->setForeignKeys($foreigns);
-        $this->tables[$this->table]=$table;
-        try{
-            $this->tables[$this->table]->create($this->connection,$sql);
-        } catch (\Exception $e){
-            die($e->getMessage());
-        }
-        file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
+		$this->tables[$the_table]=$table;
+		$this->sql = "CREATE TABLE `".$the_table."`(\n$sql\n);\n";
+		$this->execute();
     }
+
+	public function update(\mysqli $conn)
+	{
+		throw new \Exception("Not implemented");
+	}
+
+	public function read(\mysqli $conn)
+	{
+		throw new \Exception("Not implemented");
+	}
+
+	public function execute()
+	{
+		$this->connection->query($this->sql);
+		if($this->connection->error) throw new \Exception($this->connection->error);
+		file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
+		$this->sql = '';
+	}
 }

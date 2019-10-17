@@ -131,15 +131,11 @@ class Table {
 		$this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
 	}
 
-	public function create(\mysqli $conn, string $sql)
+	public function read($perpage, $page, \mysqli $conn)
 	{
-	    $sql="CREATE TABLE `".$this->name."`(\n$sql\n)";
-		$conn->query($sql);
-		if($conn->error) throw new \Exception($conn->error);
-	}
-
-	public function read(\mysqli $conn)
-	{
+		$limit = null;
+		if ($perpage != null && $page == null) $limit = $perpage;
+		elseif ($perpage != null && $page != null) $limit = ($perpage*$page).", ".$perpage;
 		$output=[];
 		try{
 			if(!isset($this->stack['selects'])){
@@ -172,7 +168,7 @@ class Table {
 			//WHERE
 			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
 			if(isset($this->stack['where'])){
-				$table=$conn->prepare($sql);
+				$table=$conn->prepare($sql.($limit ? " LIMIT $limit" : ""));
 				$types=['integer'=>'i','double'=>'d','string'=>'s'];
 				$bind=[''];
 				foreach($this->stack['where'] AS $w) {
@@ -183,7 +179,7 @@ class Table {
 				$table->execute();
 				$table=$table->get_result();
 			}
-			else $table=$conn->query($sql);
+			else $table=$conn->query($sql.($limit ? " LIMIT $limit" : ""));
 
 			$i=-1;
 			while($row=$table->fetch_assoc()){
@@ -208,13 +204,41 @@ class Table {
 		return $output;
 	}
 
-	public function update(\mysqli $conn)
+	public function insert($cols, $arr, \mysqli $conn)
+	{
+		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
+		$sql .= "VALUES ";
+		if (is_array($arr[0])) {
+			for($i = 0; $i < count($arr); $i++) {
+				$sql .= "(";
+				foreach($arr[$i] AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+				$sql = rtrim($sql,',').")";
+				if ($i == count($arr)-1) $sql .= ";\n";
+				else $sql .= ",\n";
+			}
+		} else {
+			$sql .= "(";
+			foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+			$sql = rtrim($sql,',').");\n";
+		}
+		$this->execute($sql, $conn);
+	}
+
+	public function update($arr, \mysqli $conn)
 	{
 		throw new \Exception("Not implemented");
 	}
 
-	public function delete(\mysqli $conn)
+	public function delete($arr, \mysqli $conn)
 	{
 		throw new \Exception("Not implemented");
+	}
+
+	public function execute($sql, \mysqli $conn)
+	{
+		echo "<pre><h4>";
+		echo $sql;
+		$conn->query($sql);
+		if($conn->error) throw new \Exception($conn->error);
 	}
 }

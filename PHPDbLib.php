@@ -1,12 +1,14 @@
 <?php
+use PHPDbLib\Database\DatabaseActions;
+use PHPDbLib\Database\Database;
+use PHPDbLib\Database\TableActions;
 use PHPDbLib\Database\Table;
-use PHPDbLib\Database\TableExistHandler;
-use PHPDbLib\Database\TableNotExistHandler;
 
 class PHPDbLib {
+	private $tables;
 	private $connection;
 	private $db;
-	private $tables;
+	private $d;
 
 	function __construct(array $config, $dbname)
 	{
@@ -18,8 +20,8 @@ class PHPDbLib {
             file_put_contents(__DIR__."/#db/$dbname",serialize($tables));
         }
         else $tables=unserialize($tables);
-
-        $this->tables=$tables;
+		$this->tables=$tables;
+		$this->d = new DatabaseActions($this->tables, $this->connection, $this->db);
 	}
 
 	function __destruct()
@@ -32,16 +34,39 @@ class PHPDbLib {
 		return $this->connection;
 	}
 
-    public function table($table)
-    {
-        if($this->tableExist($table)) return new TableExistHandler($table,$this->tables,$this->connection);
-        $this->tables[$table]=[];
-        return new TableNotExistHandler($table,$this->tables,$this->connection,$this->db);
-    }
+	public function create($table, $callable)
+	{
+		return $this->d->create($table, $callable);
+	}
 
-    public function tableExist($table)
+	public function delete($table)
+	{
+		return $this->d->delete($table);
+	}
+
+	public function update()
+	{
+		return $this->d->update();
+	}
+
+	public function read()
+	{
+		return $this->d->read();
+	}
+
+	public function execute()
+	{
+		return $this->d->execute();
+	}
+
+	public function exist($table)
     {
         return isset($this->tables[$table]);
+    }
+
+    public function table($table)
+    {
+		return new TableActions($table,$this->tables,$this->connection,$this->db);
     }
 
 	public function CreateObjectFromDatabase(): array

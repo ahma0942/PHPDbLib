@@ -1,7 +1,7 @@
 <?php
 namespace PHPDbLib\Database;
 
-class TableExistHandler {
+class TableActions {
     private $table;
     private $tables;
     private $connection;
@@ -39,14 +39,23 @@ class TableExistHandler {
         return $this;
     }
 
-    public function read()
+    public function read($perpage = null, $page = null)
     {
-        return $this->tables[$this->table]->read($this->connection);
+        return $this->tables[$this->table]->read($perpage, $page, $this->connection);
     }
 
-    public function delete()
+    public function update($arr)
     {
-        $this->tables[$this->table]->delete($this->connection);
-        return new TableNotExistHandler($this->table,$this->tables,$this->connection,$this->db);
+        $this->tables[$this->table]->update($arr, $this->connection);
+    }
+
+    public function delete($arr)
+    {
+        $this->tables[$this->table]->delete($arr, $this->connection);
+    }
+
+    public function insert($cols, $arr)
+    {
+        $this->tables[$this->table]->insert($cols, $arr, $this->connection);
     }
 }

@@ -1,13 +1,13 @@
 <?php
 namespace PHPDbLib\Database\Types\StringTypes;
 
-use PHPDbLib\Database\Types\ColumnTypes\AsciiType;
+use PHPDbLib\Database\Types\ColumnTypes\NoLengthType;
 
-class Text extends AsciiType {
+class Text extends NoLengthType {
     protected $type="TEXT";
 
     function __construct($name)
     {
-        parent::__construct($name,null);
+        parent::__construct($name);
     }
 }
