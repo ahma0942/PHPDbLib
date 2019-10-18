@@ -104,7 +104,7 @@ class DatabaseTypes {
         return $obj;
     }
 
-    /*****************************STRING TYPES******************************/
+    /*****************************DATETIME TYPES******************************/
     public function date(string $name){
         $obj=new Date($name);
         $this->stack[]=$obj;
