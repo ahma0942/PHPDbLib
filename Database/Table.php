@@ -236,8 +236,6 @@ class Table {
 
 	public function execute($sql, \mysqli $conn)
 	{
-		echo "<pre><h4>";
-		echo $sql;
 		$conn->query($sql);
 		if($conn->error) throw new \Exception($conn->error);
 	}
