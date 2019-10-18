@@ -106,7 +106,8 @@ class Database {
         $table->setForeignKeys($foreigns);
 		$this->tables[$the_table]=$table;
 		$this->sql = "CREATE TABLE `".$the_table."`(\n$sql\n);\n";
-		$this->execute();
+        $this->execute();
+        return $this->tables;
     }
 
 	public function update(\mysqli $conn)
@@ -124,6 +125,6 @@ class Database {
 		$this->connection->query($this->sql);
 		if($this->connection->error) throw new \Exception($this->connection->error);
 		file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
-		$this->sql = '';
+        $this->sql = '';
 	}
 }

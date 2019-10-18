@@ -14,6 +14,10 @@ class PHPDbLib {
 	{
 	    $this->db=$dbname;
 		$this->connection = new mysqli($config['host'],$config['user'],$config['pass'],$dbname);
+		if(!file_exists(__DIR__.'/#db')) {
+			mkdir(__DIR__.'/#db');
+			file_put_contents(__DIR__.'/#db/.htaccess','Deny from  all');
+		}
         @$tables=file_get_contents(__DIR__."/#db/$dbname");
         if($tables===false) {
             $tables=$this->CreateObjectFromDatabase();
@@ -36,7 +40,8 @@ class PHPDbLib {
 
 	public function create($table, $callable)
 	{
-		return $this->d->create($table, $callable);
+		$this->tables = $this->d->create($table, $callable);
+		return $this;
 	}
 
 	public function delete($table)

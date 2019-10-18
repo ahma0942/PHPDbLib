@@ -23,8 +23,7 @@ class DatabaseActions {
 
     public function create($table, $callable)
     {
-        $this->d->create($table, $callable);
-        return $this;
+        return $this->d->create($table, $callable);
     }
 
     public function update()
