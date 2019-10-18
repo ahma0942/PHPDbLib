@@ -121,8 +121,6 @@ class Database {
 
 	public function execute()
 	{
-        echo "<pre><h4>";
-        echo $this->sql;
 		$this->connection->query($this->sql);
 		if($this->connection->error) throw new \Exception($this->connection->error);
 		file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
