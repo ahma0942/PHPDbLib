@@ -6,6 +6,7 @@ class Table {
 	public $columns=[];
 	public $keys=[];
 	public $stack = [];
+	public $readonly = false;
 
 	function __construct(string $name)
 	{
@@ -20,6 +21,11 @@ class Table {
 	public function setForeignKeys(array $keys)
 	{
 		$this->keys=$keys;
+	}
+
+	public function readonly($readonly = true)
+	{
+		$this->readonly = $readonly;
 	}
 
 	public function select($arr)
@@ -272,7 +278,7 @@ class Table {
 
 	public function execute($sql, \mysqli $conn)
 	{
-		if (PHPDbLib::readonly) echo $sql;
+		if ($this::readonly) echo $sql;
 		else $conn->query($sql);
 		if($conn->error) throw new \Exception($conn->error);
 	}
