@@ -46,7 +46,7 @@ class PHPDbLib {
 		return $this;
 	}
 
-	public function readonly($readonly)
+	public function readonly($readonly = true)
 	{
 		$this->d->readonly($readonly);
 		return $this;
