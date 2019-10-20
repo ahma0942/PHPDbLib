@@ -69,7 +69,7 @@ class Database {
                 if($arr['collation']) $sql.=" COLLATE {$arr['collation']}";
             }
             if($obj instanceof NumberType && $arr['unsigned']) $sql.=" UNSIGNED";
-            if(!isset($arr['null']) || isset($arr['ai'])) $sql.=" NOT NULL";
+            if(!$arr['null'] || $arr['ai']) $sql.=" NOT NULL";
             if($obj instanceof IntType && $arr['ai']) $sql.=" AUTO_INCREMENT";
             if($arr['default'] != '' || $arr['default']===0) $sql.=" DEFAULT '".str_replace("'", "\'", $arr['default'])."'";
 
