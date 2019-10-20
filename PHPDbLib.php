@@ -9,9 +9,11 @@ class PHPDbLib {
 	private $connection;
 	private $db;
 	private $d;
+	private $readonly;
 
-	function __construct(array $config, $dbname)
+	function __construct(array $config, $dbname, $readonly = false)
 	{
+		$this->readonly = $readonly;
 	    $this->db=$dbname;
 		$this->connection = new mysqli($config['host'],$config['user'],$config['pass'],$dbname);
 		if(!file_exists(__DIR__.'/#db')) {

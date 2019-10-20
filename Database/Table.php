@@ -272,7 +272,8 @@ class Table {
 
 	public function execute($sql, \mysqli $conn)
 	{
-		$conn->query($sql);
+		if (PHPDbLib::readonly) echo $sql;
+		else $conn->query($sql);
 		if($conn->error) throw new \Exception($conn->error);
 	}
 }
