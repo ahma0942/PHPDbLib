@@ -222,6 +222,42 @@ class Table {
 			$sql = rtrim($sql,',').");\n";
 		}
 		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn);
+	}
+
+	public function checkInsert($cols, $arr, $cols2, $arr2, \mysqli $conn)
+	{
+		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
+		$sql .= "SELECT *  FROM (SELECT ";
+		foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+		$sql = rtrim($sql,',').") AS tmp\n";
+		$sql .= "WHERE NOT EXISTS (\n\t";
+		$sql .= "SELECT id FROM `".$this->name."` WHERE ";
+		$len = count($cols2);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".mysqli_real_escape_string($conn, $arr2[$i])."' AND ";
+		$sql = substr($sql, 0, -5)."\n) LIMIT 1;";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn);
+	}
+
+	public function exist($cols, $arr, \mysqli $conn)
+	{
+		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
+		$len = count($cols);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		$sql = substr($sql, 0, -5)."LIMIT 1;";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn) > 0 ? true : false;
+	}
+
+	public function count($cols, $arr, \mysqli $conn)
+	{
+		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
+		$len = count($cols);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		$sql = substr($sql, 0, -5).";";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn);
 	}
 
 	public function update($arr, \mysqli $conn)

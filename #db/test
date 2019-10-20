@@ -1,0 +1,1 @@
+a:1:{s:5:"users";O:23:"PHPDbLib\Database\Table":4:{s:4:"name";s:5:"users";s:7:"columns";a:2:{i:0;s:2:"id";i:1;s:8:"fullname";}s:4:"keys";a:0:{}s:5:"stack";a:0:{}}}

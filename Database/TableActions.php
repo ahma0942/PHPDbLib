@@ -56,6 +56,28 @@ class TableActions {
 
     public function insert($cols, $arr)
     {
-        $this->tables[$this->table]->insert($cols, $arr, $this->connection);
+        return $this->tables[$this->table]->insert($cols, $arr, $this->connection);
+    }
+
+    public function checkInsert($cols, $arr, $cols2 = [], $arr2 = [])
+    {
+        if (empty($cols2) && empty($arr2)) {
+            $cols2 = $cols;
+            $arr2 = $arr;
+        } elseif(empty($arr2)) {
+            foreach($cols2 AS $c)
+                $arr2[] = $arr[array_search($c, $cols)];
+        }
+        return $this->tables[$this->table]->checkInsert($cols, $arr, $cols2, $arr2, $this->connection);
+    }
+
+    public function exist($cols, $arr)
+    {
+        return $this->tables[$this->table]->exist($cols, $arr, $this->connection);
+    }
+
+    public function count($cols, $arr)
+    {
+        return $this->tables[$this->table]->count($cols, $arr, $this->connection);
     }
 }
