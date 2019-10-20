@@ -46,6 +46,12 @@ class PHPDbLib {
 		return $this;
 	}
 
+	public function readonly($readonly)
+	{
+		$this->d->readonly($readonly);
+		return $this;
+	}
+
 	public function delete($table)
 	{
 		return $this->d->delete($table);

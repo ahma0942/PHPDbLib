@@ -15,16 +15,22 @@ class Database {
 	public $tables;
 	public $connection;
 	public $db;
-	public $sql;
+    public $sql;
+    public $readonly = false;
 
 	function __construct($tables, $conn, $db)
 	{
 		$this->tables=$tables;
 		$this->connection=$conn;
-		$this->db=$db;
+        $this->db=$db;
 	}
 
-	public function delete($table)
+    public function readonly($readonly = true)
+    {
+        $this->readonly = $readonly;
+    }
+
+    public function delete($table)
 	{
 		if (isset($this->tables[$table])) {
 			$this->sql = "DROP TABLE IF EXISTS `$table`;\n";
@@ -122,9 +128,12 @@ class Database {
 
 	public function execute()
 	{
-		$this->connection->query($this->sql);
-		if($this->connection->error) throw new \Exception($this->connection->error);
-		file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
+        if ($this->readonly) echo $this->sql;
+        else {
+            $this->connection->query($this->sql);
+            if($this->connection->error) throw new \Exception($this->connection->error);
+            file_put_contents(__DIR__."/../#db/".$this->db,serialize($this->tables));
+        }
         $this->sql = '';
 	}
 }

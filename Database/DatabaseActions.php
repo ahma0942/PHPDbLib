@@ -21,6 +21,12 @@ class DatabaseActions {
         return $this;
     }
 
+    public function readonly($readonly = true)
+    {
+        $this->d->readonly($readonly);
+        return $this;
+    }
+
     public function create($table, $callable)
     {
         return $this->d->create($table, $callable);
