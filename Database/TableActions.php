@@ -80,4 +80,10 @@ class TableActions {
     {
         return $this->tables[$this->table]->count($cols, $arr, $this->connection);
     }
+
+    public function readonly($set = true)
+    {
+        $this->tables[$this->table]->readonly($set);
+        return $this;
+    }
 }
