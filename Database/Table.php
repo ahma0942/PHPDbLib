@@ -26,6 +26,7 @@ class Table {
 	public function readonly($readonly = true)
 	{
 		$this->readonly = $readonly;
+		return $this;
 	}
 
 	public function select($arr)
