@@ -278,7 +278,7 @@ class Table {
 
 	public function execute($sql, \mysqli $conn)
 	{
-		if ($this::readonly) echo $sql;
+		if ($this->readonly) echo $sql;
 		else $conn->query($sql);
 		if($conn->error) throw new \Exception($conn->error);
 	}
