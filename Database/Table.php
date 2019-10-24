@@ -180,8 +180,13 @@ class Table {
 
 			//WHERE
 			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
+			$sql = $sql.($limit ? " LIMIT $limit" : "");
+			if ($this->readonly) {
+				echo "<h2><pre>$sql</pre></h2>";
+				return;
+			}
 			if(isset($this->stack['where'])){
-				$table=$conn->prepare($sql.($limit ? " LIMIT $limit" : ""));
+				$table=$conn->prepare($sql);
 				$types=['integer'=>'i','double'=>'d','string'=>'s'];
 				$bind=[''];
 				foreach($this->stack['where'] AS $w) {
@@ -192,7 +197,7 @@ class Table {
 				$table->execute();
 				$table=$table->get_result();
 			}
-			else $table=$conn->query($sql.($limit ? " LIMIT $limit" : ""));
+			else $table=$conn->query($sql);
 
 			$i=-1;
 			while($row=$table->fetch_assoc()){
