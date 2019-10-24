@@ -14,8 +14,13 @@ class Result implements \ArrayAccess {
         $this->data = $data;
     }
 
-    public function &getData() {
-        return $this->data;
+    public function getArray() {
+        $d = [];
+        foreach($this->data AS $k=>$v) {
+            if ($v instanceof \ArrayAccess) $d[$k] = $v->getArray();
+            else $d[$k] = $v;
+        }
+        return $d;
     }
 
     public function update() {
