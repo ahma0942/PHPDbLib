@@ -2,6 +2,7 @@
 namespace PHPDbLib\Database;
 
 class Table {
+	public $tables;
 	public $name;
 	public $columns=[];
 	public $keys=[];
@@ -74,7 +75,7 @@ class Table {
 				$rand=rand();
 				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for table '$arr'");
 				$tab=$this->keys[$arr];
-				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$arr,$tab[1]->name,$tab[2],$rand);
+				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$arr,$tab[1],$tab[2],$rand);
 				$this->_create_select_array([$arr=>$rand],$this);
 			}
 			elseif(is_array($arr)){
@@ -103,11 +104,16 @@ class Table {
 				$this->_create_select_array([$t=>$rand],$tab,implode('.',$select));
 				unset($this->stack['selects'][implode('.',$select)]);
 				$tab=$tab->keys[$t];
-				$this->_create_inner_join_sql($last,$t,$tab[1]->name,$tab[2],$rand);
-				$last=$tab[1]->name.'_'.$rand;
+				$this->_create_inner_join_sql($last,$t,$tab[1],$tab[2],$rand);
+				$last=$tab[1].'_'.$rand;
 				$tab=$tab[1];
 			}
 		}
+	}
+
+	public function addTables($tables)
+	{
+		$this->tables = $tables;
 	}
 
 	private function _create_select_array($arr,$class,$prefix="")
@@ -125,8 +131,8 @@ class Table {
 		foreach($class->columns as $col){
 			if(!$doneThisBefore && !isset($arr[$col]) && $class->name==$this->name) $this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 			elseif(isset($arr[$col])){
-				$t=$class->keys[$col][1]->name;
-				foreach($class->keys[$col][1]->columns as $cols) {
+				$t=$class->keys[$col][1];
+				foreach($this->tables[$t]->columns as $cols) {
 					$this->stack['selects'][($prefix!=""?$prefix:$col).'.'.$cols]='`'.$t.'_'.$arr[$col].'`.`'.$cols.'`';
 				}
 			}
@@ -191,11 +197,12 @@ class Table {
 			$i=-1;
 			while($row=$table->fetch_assoc()){
 				$i++;
+				$output[$i] = new Result($this->name, $this->columns, $this->keys, $conn);
 				foreach($row AS $k=>$v){
 					if(strpos($k,'.')!==false){
 						$keys=explode('.',$k);
 						$main=array_shift($keys);
-						if(!isset($output[$i][$main])) $output[$i][$main]=[];
+						if(!isset($output[$i][$main])) $output[$i][$main] = new Result($this->keys[$main][1], $this->columns, $this->keys, $conn);
 						$t=&$output[$i][$main];
 						foreach($keys as $key) $t=&$t[$key];
 						$t=$v;

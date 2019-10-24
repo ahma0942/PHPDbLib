@@ -35,6 +35,7 @@ class TableActions {
 
     public function join($arr)
     {
+        $this->tables[$this->table]->addTables($this->tables);
         $this->tables[$this->table]->join($arr);
         return $this;
     }
