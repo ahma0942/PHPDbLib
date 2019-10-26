@@ -189,9 +189,9 @@ class Table {
 				$table=$conn->prepare($sql);
 				$types=['integer'=>'i','double'=>'d','string'=>'s'];
 				$bind=[''];
-				foreach($this->stack['where'] AS $w) {
-					$bind[0].=$types[gettype($w)];
-					$bind[]=&$w;
+				for($i=0; $i<count($this->stack['where']); $i++){
+					$bind[0].=$types[gettype($this->stack['where'][$i])];
+					$bind[]=&$this->stack['where'][$i];
 				}
 				call_user_func_array(array($table,'bind_param'),$bind);
 				$table->execute();
@@ -220,7 +220,7 @@ class Table {
 		}
 
 		$this->stack=[];
-		return $output;
+		return new Result($this->name, $this->columns, $this->keys, $conn, $output);
 	}
 
 	public function insert($cols, $arr, \mysqli $conn)
