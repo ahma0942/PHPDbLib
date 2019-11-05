@@ -243,7 +243,7 @@ class Table {
 			}
 		} else $sql.="();";
 		$this->execute($sql, $conn);
-		return count($arr) === 1 ? $conn->insert_id : mysqli_affected_rows($conn);
+		return count($arr) < 2 ? $conn->insert_id : mysqli_affected_rows($conn);
 	}
 
 	public function checkInsert($cols, $arr, $cols2, $arr2, \mysqli $conn)
