@@ -223,23 +223,25 @@ class Table {
 		return new Result($this->name, $this->columns, $this->keys, $conn, $output);
 	}
 
-	public function insert($cols, $arr, \mysqli $conn)
+	public function insert($cols=[], $arr=[], \mysqli $conn)
 	{
-		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
+		$sql = "INSERT INTO `".$this->name."`".(empty($cols) ? " " : "(`".implode('`,`', $cols)."`)\n");
 		$sql .= "VALUES ";
-		if (is_array($arr[0])) {
-			for($i = 0; $i < count($arr); $i++) {
+		if(!empty($arr)){
+			if (is_array($arr[0])) {
+				for($i = 0; $i < count($arr); $i++) {
+					$sql .= "(";
+					foreach($arr[$i] AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+					$sql = rtrim($sql,',').")";
+					if ($i == count($arr)-1) $sql .= ";\n";
+					else $sql .= ",\n";
+				}
+			} else {
 				$sql .= "(";
-				foreach($arr[$i] AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
-				$sql = rtrim($sql,',').")";
-				if ($i == count($arr)-1) $sql .= ";\n";
-				else $sql .= ",\n";
+				foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+				$sql = rtrim($sql,',').");\n";
 			}
-		} else {
-			$sql .= "(";
-			foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
-			$sql = rtrim($sql,',').");\n";
-		}
+		} else $sql.="();";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn);
 	}

@@ -55,7 +55,7 @@ class TableActions {
         $this->tables[$this->table]->delete($arr, $this->connection);
     }
 
-    public function insert($cols, $arr)
+    public function insert($cols=[], $arr=[])
     {
         return $this->tables[$this->table]->insert($cols, $arr, $this->connection);
     }
