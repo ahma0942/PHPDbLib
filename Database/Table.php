@@ -219,6 +219,7 @@ class Table {
 			die($e->getMessage());
 		}
 
+		$this->stack=[];
 		return new Result($this->name, $this->columns, $this->keys, $conn, $output);
 	}
 
