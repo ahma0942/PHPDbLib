@@ -87,10 +87,7 @@ class PHPDbLib {
 		$orm=[];
 		$res=$this->conn()->query("SHOW TABLES FROM $this->db")->fetch_all();
 
-		foreach($res AS $table){
-			$orm[$table[0]]=new Table($table[0]);
-		}
-
+		foreach($res AS $table) $orm[$table[0]]=new Table($table[0]);
 		foreach($res AS $table)
 		{
 			$columns=$this->conn()->query("DESCRIBE {$table[0]}")->fetch_all();

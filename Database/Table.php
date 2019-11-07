@@ -99,14 +99,14 @@ class Table {
 				$this->_create_nested_join_sql($last,$t,$tab,$select);
 			}
 			else{
-				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for table '$t'");
+				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for column '$t'");
 				$select[]=$t;
 				$this->_create_select_array([$t=>$rand],$tab,implode('.',$select));
 				unset($this->stack['selects'][implode('.',$select)]);
-				$tab=$tab->keys[$t];
-				$this->_create_inner_join_sql($last,$t,$tab[1],$tab[2],$rand);
-				$last=$tab[1].'_'.$rand;
-				$tab=$tab[1];
+				$this->_create_inner_join_sql($last,$t,$tab->keys[$t][1],$tab->keys[$t][2],$rand);
+				$last=$tab->keys[$t][1].'_'.$rand;
+				$tab=$tab->tables[$tab->keys[$t][1]];
+				// exit;
 			}
 		}
 	}
