@@ -68,15 +68,43 @@ class Table {
 		return $sql;
 	}
 
+	public function noCheckJoin($arr)
+	{
+		if (!is_array($arr)) throw new \Exception("Expected array, got '".gettype($arr)."'");
+		try{
+			if(!is_array($arr[0])){
+				$rand=rand();
+				$tab=$this->keys[$arr];
+				$this->_create_inner_join_sql_noCheck('_ref_'.$tab[0].'_ref',$arr,$tab[1],$tab[2],$rand);
+				$this->_create_select_array([$arr=>$rand],$this);
+			}
+			elseif(is_array($arr[0])){
+				$this->_create_nested_join_sql('_ref_'.$this->name.'_ref',$arr,$this);
+			}
+		} catch (\Exception $e){
+			die($e->getMessage());
+		}
+		return $this;
+	}
+
 	public function join($arr)
 	{
 		try{
 			if(!is_array($arr)){
 				$rand=rand();
-				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for table '$arr'");
+				if(strpos($arr,'|')!==false){
+					$opt=explode('|',$arr);
+					$arr=array_shift($opt);
+				} else $opt=[];
+				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for column '$arr'");
+				if(!isset($this->keys[$arr][2])) throw new \Exception("Reference for '$arr' is too ambitious. Use the following:\n".$this->keys[$arr][0]."\n".$this->keys[$arr][1]);
+				$tarr=explode('.',$arr);
+				$joined_table=null;
+				if(!isset($this->keys[$tarr[0]])) $tarr[0]=$arr;
+				if(strpos($t,'.')!==false) $joined_table=explode('.',$arr)[1];
 				$tab=$this->keys[$arr];
-				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$arr,$tab[1],$tab[2],$rand);
-				$this->_create_select_array([$arr=>$rand],$this);
+				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$tarr[0],$tab[1],$tab[2],$rand,in_array('NULL',$opt)?true:false);
+				$this->_create_select_array([$tarr[0]=>$rand],$this,"",$joined_table);
 			}
 			elseif(is_array($arr)){
 				$this->_create_nested_join_sql('_ref_'.$this->name.'_ref',$arr,$this);
@@ -84,7 +112,6 @@ class Table {
 		} catch (\Exception $e){
 			die($e->getMessage());
 		}
-
 		return $this;
 	}
 
@@ -99,14 +126,22 @@ class Table {
 				$this->_create_nested_join_sql($last,$t,$tab,$select);
 			}
 			else{
+				if(strpos($t,'|')!==false){
+					$opt=explode('|',$t);
+					$t=array_shift($opt);
+				} else $opt=[];
 				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for column '$t'");
-				$select[]=$t;
-				$this->_create_select_array([$t=>$rand],$tab,implode('.',$select));
+				if(!isset($tab->keys[$t][2])) throw new \Exception("Reference for '$t' is too ambitious. Use the following:\n".$tab->keys[$t][0]."\n".$tab->keys[$t][1]);
+				$tt=explode('.',$t);
+				$joined_table=null;
+				if(!isset($tab->keys[$tt[0]])) $tt[0]=$t;
+				if(strpos($t,'.')!==false) $joined_table=explode('.',$t)[1];
+				$select[]=$tt[0];
+				$this->_create_select_array([$tt[0]=>$rand],$tab,implode('.',$select),$joined_table);
 				unset($this->stack['selects'][implode('.',$select)]);
-				$this->_create_inner_join_sql($last,$t,$tab->keys[$t][1],$tab->keys[$t][2],$rand);
+				$this->_create_inner_join_sql($last,$tt[0],$tab->keys[$t][1],$tab->keys[$t][2],$rand,in_array('NULL',$opt)?true:false);
 				$last=$tab->keys[$t][1].'_'.$rand;
 				$tab=$tab->tables[$tab->keys[$t][1]];
-				// exit;
 			}
 		}
 	}
@@ -116,7 +151,7 @@ class Table {
 		$this->tables = $tables;
 	}
 
-	private function _create_select_array($arr,$class,$prefix="")
+	private function _create_select_array($arr,$class,$prefix="",$table=null)
 	{
 		$doneThisBefore=false;
 		if(!empty($this->stack['selects'])){
@@ -131,7 +166,7 @@ class Table {
 		foreach($class->columns as $col){
 			if(!$doneThisBefore && !isset($arr[$col]) && $class->name==$this->name) $this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 			elseif(isset($arr[$col])){
-				$t=$class->keys[$col][1];
+				$t=$table ? $table : $class->keys[$col][1];
 				foreach($this->tables[$t]->columns as $cols) {
 					$this->stack['selects'][($prefix!=""?$prefix:$col).'.'.$cols]='`'.$t.'_'.$arr[$col].'`.`'.$cols.'`';
 				}
@@ -139,9 +174,10 @@ class Table {
 		}
 	}
 
-	private function _create_inner_join_sql($referenced_table,$referenced_column,$join_table,$join_column,$rand)
+	private function _create_inner_join_sql($referenced_table,$referenced_column,$join_table,$join_column,$rand,$null=false)
 	{
-		$this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
+		if(!$null) $this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
+		else $this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON (`$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column` OR (`$referenced_table`.`$referenced_column` IS NULL AND `{$join_table}_{$rand}`.`$join_column` IS NULL))";
 	}
 
 	public function read($perpage, $page, \mysqli $conn)
@@ -176,7 +212,7 @@ class Table {
 
 			//JOIN
 			$sql.="\nFROM {$this->name} _ref_{$this->name}_ref\n".
-			(isset($this->stack['join'])?' '.implode(" ",$this->stack['join']):'');
+			(isset($this->stack['join'])?implode("\n",$this->stack['join']):'');
 
 			//WHERE
 			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);

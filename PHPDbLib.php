@@ -87,6 +87,7 @@ class PHPDbLib {
 		$orm=[];
 		$res=$this->conn()->query("SHOW TABLES FROM $this->db")->fetch_all();
 
+		$foreignkeys=[];
 		foreach($res AS $table) $orm[$table[0]]=new Table($table[0]);
 		foreach($res AS $table)
 		{
@@ -98,13 +99,21 @@ class PHPDbLib {
     		")->fetch_all();
 
 			$cols=[];
-			$foreignkeys=[];
 			foreach($columns AS $column) $cols[]=$column[0];
-			foreach($keys AS $key) $foreignkeys[$key[1]]=[$key[0],$orm[$key[2]],$key[3]];
-
+			foreach($keys AS $key) {
+				$foreignkeys[$key[0]][$key[1]]=[$key[0],$key[2],$key[3]];
+				if (isset($foreignkeys[$key[2]][$key[3]])){
+					$foreignkeys[$key[2]][$key[3].".".$key[0].".".$key[1]]=[$key[2],$key[0],$key[1]];
+					$foreignkeys[$key[2]][$key[3].".".$foreignkeys[$key[2]][$key[3]][1].".".$foreignkeys[$key[2]][$key[3]][1]]=[$foreignkeys[$key[2]][$key[3]][0],$foreignkeys[$key[2]][$key[3]][1],$foreignkeys[$key[2]][$key[3]][2]];
+					$foreignkeys[$key[2]][$key[3]]=[
+						$key[3].".".$key[0].".".$key[1],
+						$key[3].".".$foreignkeys[$key[2]][$key[3]][1].".".$foreignkeys[$key[2]][$key[3]][1]
+					];
+				} else $foreignkeys[$key[2]][$key[3]]=[$key[2],$key[0],$key[1]];
+			}
 			$orm[$table[0]]->setColumns($cols);
-			$orm[$table[0]]->setForeignKeys($foreignkeys);
 		}
+		foreach($foreignkeys as $tab=>$fk) $orm[$tab]->setForeignKeys($fk);
 		return $orm;
 	}
 }

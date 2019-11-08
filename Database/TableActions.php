@@ -40,6 +40,13 @@ class TableActions {
         return $this;
     }
 
+    public function _join($arr)
+    {
+        $this->tables[$this->table]->addTables($this->tables);
+        $this->tables[$this->table]->noCheckJoin($arr);
+        return $this;
+    }
+
     public function read($perpage = null, $page = null)
     {
         return $this->tables[$this->table]->read($perpage, $page, $this->connection);
