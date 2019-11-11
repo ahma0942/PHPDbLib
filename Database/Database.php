@@ -89,7 +89,7 @@ class Database {
             elseif($key=='foreign'){
                 foreach($args as $col=>$arr){
                     list($table,$column)=explode('.',$arr[0]);
-                    $sql.="FOREIGN KEY fk_$col(`$col`) REFERENCES `$table`(`$column`)";
+                    $sql.="FOREIGN KEY fk_".$table."_$col(`$col`) REFERENCES `$table`(`$column`)";
                     $sql.=" ON DELETE ".ForeignKeyOptions::getValue($arr[1]);
                     $sql.=" ON UPDATE ".ForeignKeyOptions::getValue($arr[2]).",";
                     $foreigns[$col]=[$the_table,$table,$column];
