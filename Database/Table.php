@@ -101,7 +101,7 @@ class Table {
 				$tarr=explode('.',$arr);
 				$joined_table=null;
 				if(!isset($this->keys[$tarr[0]])) $tarr[0]=$arr;
-				if(strpos($t,'.')!==false) $joined_table=explode('.',$arr)[1];
+				if(strpos($arr,'.')!==false) $joined_table=explode('.',$arr)[1];
 				$tab=$this->keys[$arr];
 				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$tarr[0],$tab[1],$tab[2],$rand,in_array('NULL',$opt)?true:false,in_array('LEFT',$opt)?true:false);
 				$this->_create_select_array([$tarr[0]=>$rand],$this,"",$joined_table);
