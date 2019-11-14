@@ -103,7 +103,7 @@ class Table {
 				if(!isset($this->keys[$tarr[0]])) $tarr[0]=$arr;
 				if(strpos($t,'.')!==false) $joined_table=explode('.',$arr)[1];
 				$tab=$this->keys[$arr];
-				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$tarr[0],$tab[1],$tab[2],$rand,in_array('NULL',$opt)?true:false);
+				$this->_create_inner_join_sql('_ref_'.$tab[0].'_ref',$tarr[0],$tab[1],$tab[2],$rand,in_array('NULL',$opt)?true:false,in_array('LEFT',$opt)?true:false);
 				$this->_create_select_array([$tarr[0]=>$rand],$this,"",$joined_table);
 			}
 			elseif(is_array($arr)){
@@ -139,7 +139,7 @@ class Table {
 				$select[]=$tt[0];
 				$this->_create_select_array([$tt[0]=>$rand],$tab,implode('.',$select),$joined_table);
 				unset($this->stack['selects'][implode('.',$select)]);
-				$this->_create_inner_join_sql($last,$tt[0],$tab->keys[$t][1],$tab->keys[$t][2],$rand,in_array('NULL',$opt)?true:false);
+				$this->_create_inner_join_sql($last,$tt[0],$tab->keys[$t][1],$tab->keys[$t][2],$rand,in_array('NULL',$opt)?true:false,in_array('LEFT',$opt)?true:false);
 				$last=$tab->keys[$t][1].'_'.$rand;
 				$tab=$tab->tables[$tab->keys[$t][1]];
 			}
@@ -174,10 +174,10 @@ class Table {
 		}
 	}
 
-	private function _create_inner_join_sql($referenced_table,$referenced_column,$join_table,$join_column,$rand,$null=false)
+	private function _create_inner_join_sql($referenced_table,$referenced_column,$join_table,$join_column,$rand,$null=false,$left=false)
 	{
-		if(!$null) $this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
-		else $this->stack['join'][]="INNER JOIN `$join_table` `{$join_table}_{$rand}` ON (`$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column` OR (`$referenced_table`.`$referenced_column` IS NULL AND `{$join_table}_{$rand}`.`$join_column` IS NULL))";
+		if(!$null) $this->stack['join'][]=($left?'LEFT':'INNER')." JOIN `$join_table` `{$join_table}_{$rand}` ON `$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column`";
+		else $this->stack['join'][]=($left?'LEFT':'INNER')." JOIN `$join_table` `{$join_table}_{$rand}` ON (`$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column` OR (`$referenced_table`.`$referenced_column` IS NULL AND `{$join_table}_{$rand}`.`$join_column` IS NULL))";
 	}
 
 	public function read($perpage, $page, \mysqli $conn)
