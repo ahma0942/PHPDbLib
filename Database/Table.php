@@ -322,17 +322,24 @@ class Table {
 
 		$sql="UPDATE {$this->name} _ref_{$this->name}_ref\n".(isset($this->stack['join'])?implode("\n",$this->stack['join']):'')."\n";
 		$vals=[];
-		if (!is_array($arr[0])) {
+		if (isset($arr[0]) && !is_array($arr[0])) {
 			if(!isset($this->stack['_selects'][$arr[0]])) throw new \Exception("Cannot find column '{$arr[0]}' in where clause.");
 			$sql.="SET ".$this->stack['_selects'][$arr[0]]."=?\n";
 			$vals[]=$arr[1];
-		}
-		else {
+		} elseif (isset($arr[0]) && is_array($arr[0])) {
 			$sql.="SET";
 			foreach($arr as $val) {
 				if(!isset($this->stack['_selects'][$val[0]])) throw new \Exception("Cannot find column '{$val[0]}' in where clause.");
 				$sql.="\n".$this->stack['_selects'][$val[0]]."=?,";
 				$vals[]=$val[1];
+			}
+			$sql=rtrim($sql,',')."\n";
+		} else {
+			$sql.="SET";
+			foreach($arr as $k=>$v) {
+				if(!isset($this->stack['_selects'][$k])) throw new \Exception("Cannot find column '{$k}' in where clause.");
+				$sql.="\n".$this->stack['_selects'][$k]."=?,";
+				$vals[]=$v;
 			}
 			$sql=rtrim($sql,',')."\n";
 		}
