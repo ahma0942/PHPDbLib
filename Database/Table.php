@@ -256,7 +256,7 @@ class Table {
 			}
 			if(isset($this->stack['where'])){
 				$table=$conn->prepare($sql);
-				$types=['integer'=>'i','double'=>'d','string'=>'s'];
+				$types=['integer'=>'i','double'=>'d','string'=>'s','NULL'=>'s'];
 				$bind=[''];
 				for($i=0; $i<count($this->stack['where']); $i++){
 					$bind[0].=$types[gettype($this->stack['where'][$i])];
@@ -351,7 +351,7 @@ class Table {
 		}
 
 		$table=$conn->prepare($sql);
-		$types=['integer'=>'i','double'=>'d','string'=>'s'];
+		$types=['integer'=>'i','double'=>'d','string'=>'s','NULL'=>'s'];
 		$bind=[''];
 		for($i=0; $i<count($vals); $i++){
 			$bind[0].=$types[gettype($vals[$i])];
