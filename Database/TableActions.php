@@ -58,7 +58,7 @@ class TableActions {
 
     public function update($arr)
     {
-        if (!empty($arr)) $this->tables[$this->table]->update($arr, $this->connection);
+        if (!empty($arr)) return $this->tables[$this->table]->update($arr, $this->connection);
     }
 
     public function delete($arr)

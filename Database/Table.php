@@ -222,10 +222,8 @@ class Table {
 		elseif ($perpage != null && $page != null) $limit = ($perpage*$page).", ".$perpage;
 		$output=[];
 		try{
-			if(!isset($this->stack['selects'])){
-				foreach($this->columns AS $col) $this->stack['selects'][$col]="`$col`";
-				$this->stack['_selects']=$this->stack['selects'];
-			}
+			if(!isset($this->stack['selects']))foreach($this->columns AS $col) $this->stack['selects'][$col]="`$col`";
+			$this->stack['_selects']=$this->stack['selects'];
 
 			//SELECT
 			$sql="SELECT ";
@@ -319,12 +317,48 @@ class Table {
 
 	public function update($arr, \mysqli $conn)
 	{
-		throw new \Exception("Not implemented");
-		
+		if(!isset($this->stack['selects']))foreach($this->columns AS $col) $this->stack['selects'][$col]="`$col`";
+		$this->stack['_selects']=$this->stack['selects'];
+
 		$sql="UPDATE {$this->name} _ref_{$this->name}_ref\n".(isset($this->stack['join'])?implode("\n",$this->stack['join']):'')."\n";
-		if (!is_array($arr)) $sql.="";
-		foreach($arr as $val) {
+		$vals=[];
+		if (!is_array($arr[0])) {
+			if(!isset($this->stack['_selects'][$arr[0]])) throw new \Exception("Cannot find column '{$arr[0]}' in where clause.");
+			$sql.="SET ".$this->stack['_selects'][$arr[0]]."=?\n";
+			$vals[]=$arr[1];
 		}
+		else {
+			$sql.="SET";
+			foreach($arr as $val) {
+				if(!isset($this->stack['_selects'][$val[0]])) throw new \Exception("Cannot find column '{$val[0]}' in where clause.");
+				$sql.="\n".$this->stack['_selects'][$val[0]]."=?,";
+				$vals[]=$val[1];
+			}
+			$sql=rtrim($sql,',')."\n";
+		}
+		$sql.="WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
+
+		if ($this->readonly) {
+			echo "<h2><pre>$sql</pre></h2>";
+			return;
+		}
+
+		$table=$conn->prepare($sql);
+		$types=['integer'=>'i','double'=>'d','string'=>'s'];
+		$bind=[''];
+		for($i=0; $i<count($vals); $i++){
+			$bind[0].=$types[gettype($vals[$i])];
+			$bind[]=&$vals[$i];
+		}
+		for($i=0; $i<count($this->stack['where']); $i++){
+			$bind[0].=$types[gettype($this->stack['where'][$i])];
+			$bind[]=&$this->stack['where'][$i];
+		}
+		call_user_func_array(array($table,'bind_param'),$bind);
+		$table->execute();
+
+		$this->stack=[];
+		return mysqli_affected_rows($conn);
 	}
 
 	public function delete($arr, \mysqli $conn)
