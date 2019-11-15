@@ -17,33 +17,37 @@ class TableActions {
 
     public function select($arr)
     {
-        $this->tables[$this->table]->select($arr);
+        if (!empty($arr)) $this->tables[$this->table]->select($arr);
         return $this;
     }
 
     public function unselect($arr)
     {
-        $this->tables[$this->table]->unselect($arr);
+        if (!empty($arr)) $this->tables[$this->table]->unselect($arr);
         return $this;
     }
 
     public function where($arr)
     {
-        $this->tables[$this->table]->where($arr);
+        if (!empty($arr)) $this->tables[$this->table]->where($arr);
         return $this;
     }
 
     public function join($arr)
     {
-        $this->tables[$this->table]->addTables($this->tables);
-        $this->tables[$this->table]->join($arr);
+        if (!empty($arr)) {
+            $this->tables[$this->table]->addTables($this->tables);
+            $this->tables[$this->table]->join($arr);
+        }
         return $this;
     }
 
     public function _join($arr)
     {
-        $this->tables[$this->table]->addTables($this->tables);
-        $this->tables[$this->table]->noCheckJoin($arr);
+        if (!empty($arr)) {
+            $this->tables[$this->table]->addTables($this->tables);
+            $this->tables[$this->table]->noCheckJoin($arr);
+        }
         return $this;
     }
 
@@ -54,7 +58,7 @@ class TableActions {
 
     public function update($arr)
     {
-        $this->tables[$this->table]->update($arr, $this->connection);
+        if (!empty($arr)) $this->tables[$this->table]->update($arr, $this->connection);
     }
 
     public function delete($arr)

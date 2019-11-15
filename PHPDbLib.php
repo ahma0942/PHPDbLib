@@ -102,14 +102,19 @@ class PHPDbLib {
 			foreach($columns AS $column) $cols[]=$column[0];
 			foreach($keys AS $key) {
 				$foreignkeys[$key[0]][$key[1]]=[$key[0],$key[2],$key[3]];
-				if (isset($foreignkeys[$key[2]][$key[3]])){
+				if (isset($foreignkeys[$key[2]][$key[3]]) && $foreignkeys[$key[2]][$key[3]][0]!==false){
 					$foreignkeys[$key[2]][$key[3].".".$key[0].".".$key[1]]=[$key[2],$key[0],$key[1]];
 					$foreignkeys[$key[2]][$key[3].".".$foreignkeys[$key[2]][$key[3]][1].".".$foreignkeys[$key[2]][$key[3]][1]]=[$foreignkeys[$key[2]][$key[3]][0],$foreignkeys[$key[2]][$key[3]][1],$foreignkeys[$key[2]][$key[3]][2]];
 					$foreignkeys[$key[2]][$key[3]]=[
+						false,
+						$key[3].".".$foreignkeys[$key[2]][$key[3]][1].".".$foreignkeys[$key[2]][$key[3]][1],
 						$key[3].".".$key[0].".".$key[1],
-						$key[3].".".$foreignkeys[$key[2]][$key[3]][1].".".$foreignkeys[$key[2]][$key[3]][1]
 					];
-				} else $foreignkeys[$key[2]][$key[3]]=[$key[2],$key[0],$key[1]];
+				} elseif (isset($foreignkeys[$key[2]][$key[3]]) && $foreignkeys[$key[2]][$key[3]][0]===false){
+					$foreignkeys[$key[2]][$key[3]][]=$key[3].".".$key[0].".".$key[1];
+					$foreignkeys[$key[2]][$key[3].".".$key[0].".".$key[1]]=[$key[2],$key[0],$key[1]];
+				}
+				else $foreignkeys[$key[2]][$key[3]]=[$key[2],$key[0],$key[1]];
 			}
 			$orm[$table[0]]->setColumns($cols);
 		}

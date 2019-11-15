@@ -97,7 +97,7 @@ class Table {
 					$arr=array_shift($opt);
 				} else $opt=[];
 				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for column '$arr'");
-				if(!isset($this->keys[$arr][2])) throw new \Exception("Reference for '$arr' is too ambitious. Use the following:\n".$this->keys[$arr][0]."\n".$this->keys[$arr][1]);
+				if($this->keys[$arr][0] === false) throw new \Exception("Reference for '$arr' is too ambitious. Use the following:\n".$this->keys[$arr][0]."\n".$this->keys[$arr][1]);
 				$tarr=explode('.',$arr);
 				$joined_table=null;
 				if(!isset($this->keys[$tarr[0]])) $tarr[0]=$arr;
@@ -131,7 +131,7 @@ class Table {
 					$t=array_shift($opt);
 				} else $opt=[];
 				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for column '$t'");
-				if(!isset($tab->keys[$t][2])) throw new \Exception("Reference for '$t' is too ambitious. Use the following:\n".$tab->keys[$t][0]."\n".$tab->keys[$t][1]);
+				if($tab->keys[$t][0] === false) throw new \Exception("Reference for '$t' is too ambitious. Use the following:\n".$tab->keys[$t][0]."\n".$tab->keys[$t][1]);
 				$tt=explode('.',$t);
 				$joined_table=null;
 				if(!isset($tab->keys[$tt[0]])) $tt[0]=$t;
