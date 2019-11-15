@@ -59,8 +59,8 @@ class Table {
 				$sql.=($firstO?$firstO=false:' OR ').$this->_create_nested_where_sql($statement);
 			}
 			else{
-				if(!isset($this->stack['selects'][$statement[0]])) throw new \Exception("Cannot find column '{$statement[0]}' in where clause.");
-				$sql.=($firstA?$firstA=false:' AND ')."{$this->stack['selects'][$statement[0]]}".$statement[1].'?';
+				if(!isset($this->stack['_selects'][$statement[0]])) throw new \Exception("Cannot find column '{$statement[0]}' in where clause.");
+				$sql.=($firstA?$firstA=false:' AND ')."{$this->stack['_selects'][$statement[0]]}".$statement[1].'?';
 				$this->stack['where'][]=$statement[2];
 			}
 		}
@@ -180,6 +180,41 @@ class Table {
 		else $this->stack['join'][]=($left?'LEFT':'INNER')." JOIN `$join_table` `{$join_table}_{$rand}` ON (`$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column` OR (`$referenced_table`.`$referenced_column` IS NULL AND `{$join_table}_{$rand}`.`$join_column` IS NULL))";
 	}
 
+	public function checkInsert($cols, $arr, $cols2, $arr2, \mysqli $conn)
+	{
+		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
+		$sql .= "SELECT *  FROM (SELECT ";
+		foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+		$sql = rtrim($sql,',').") AS tmp\n";
+		$sql .= "WHERE NOT EXISTS (\n\t";
+		$sql .= "SELECT id FROM `".$this->name."` WHERE ";
+		$len = count($cols2);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".mysqli_real_escape_string($conn, $arr2[$i])."' AND ";
+		$sql = substr($sql, 0, -5)."\n) LIMIT 1;";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn);
+	}
+
+	public function exist($cols, $arr, \mysqli $conn)
+	{
+		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
+		$len = count($cols);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		$sql = substr($sql, 0, -5)."LIMIT 1;";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn) > 0 ? true : false;
+	}
+
+	public function count($cols, $arr, \mysqli $conn)
+	{
+		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
+		$len = count($cols);
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		$sql = substr($sql, 0, -5).";";
+		$this->execute($sql, $conn);
+		return mysqli_affected_rows($conn);
+	}
+
 	public function read($perpage, $page, \mysqli $conn)
 	{
 		$limit = null;
@@ -189,6 +224,7 @@ class Table {
 		try{
 			if(!isset($this->stack['selects'])){
 				foreach($this->columns AS $col) $this->stack['selects'][$col]="`$col`";
+				$this->stack['_selects']=$this->stack['selects'];
 			}
 
 			//SELECT
@@ -211,8 +247,7 @@ class Table {
 			$sql=rtrim($sql,',').' ';
 
 			//JOIN
-			$sql.="\nFROM {$this->name} _ref_{$this->name}_ref\n".
-			(isset($this->stack['join'])?implode("\n",$this->stack['join']):'');
+			$sql.="\nFROM {$this->name} _ref_{$this->name}_ref\n".(isset($this->stack['join'])?implode("\n",$this->stack['join']):'');
 
 			//WHERE
 			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
@@ -282,44 +317,14 @@ class Table {
 		return count($arr) < 2 ? $conn->insert_id : mysqli_affected_rows($conn);
 	}
 
-	public function checkInsert($cols, $arr, $cols2, $arr2, \mysqli $conn)
-	{
-		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
-		$sql .= "SELECT *  FROM (SELECT ";
-		foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
-		$sql = rtrim($sql,',').") AS tmp\n";
-		$sql .= "WHERE NOT EXISTS (\n\t";
-		$sql .= "SELECT id FROM `".$this->name."` WHERE ";
-		$len = count($cols2);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".mysqli_real_escape_string($conn, $arr2[$i])."' AND ";
-		$sql = substr($sql, 0, -5)."\n) LIMIT 1;";
-		$this->execute($sql, $conn);
-		return mysqli_affected_rows($conn);
-	}
-
-	public function exist($cols, $arr, \mysqli $conn)
-	{
-		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
-		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
-		$sql = substr($sql, 0, -5)."LIMIT 1;";
-		$this->execute($sql, $conn);
-		return mysqli_affected_rows($conn) > 0 ? true : false;
-	}
-
-	public function count($cols, $arr, \mysqli $conn)
-	{
-		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
-		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
-		$sql = substr($sql, 0, -5).";";
-		$this->execute($sql, $conn);
-		return mysqli_affected_rows($conn);
-	}
-
 	public function update($arr, \mysqli $conn)
 	{
 		throw new \Exception("Not implemented");
+		
+		$sql="UPDATE {$this->name} _ref_{$this->name}_ref\n".(isset($this->stack['join'])?implode("\n",$this->stack['join']):'')."\n";
+		if (!is_array($arr)) $sql.="";
+		foreach($arr as $val) {
+		}
 	}
 
 	public function delete($arr, \mysqli $conn)
