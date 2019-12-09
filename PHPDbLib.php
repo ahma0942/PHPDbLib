@@ -85,7 +85,7 @@ class PHPDbLib {
 	public function CreateObjectFromDatabase(): array
 	{
 		$orm=[];
-		$res=$this->conn()->query("SHOW TABLES FROM $this->db")->fetch_all();
+		$res=$this->conn()->query("SHOW TABLES FROM `$this->db`")->fetch_all();
 
 		$foreignkeys=[];
 		foreach($res AS $table) $orm[$table[0]]=new Table($table[0]);
