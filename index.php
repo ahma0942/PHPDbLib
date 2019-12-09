@@ -18,7 +18,7 @@ $config = [
 	'pass'=>'',
 ];
 
-$db = new PHPDbLib($config,'test');
+// $db = new PHPDbLib($config,'test');
 
 /*
 if(!$db->exist('users')){
