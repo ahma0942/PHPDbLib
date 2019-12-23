@@ -180,6 +180,11 @@ class Table {
 		else $this->stack['join'][]=($left?'LEFT':'INNER')." JOIN `$join_table` `{$join_table}_{$rand}` ON (`$referenced_table`.`$referenced_column`=`{$join_table}_{$rand}`.`$join_column` OR (`$referenced_table`.`$referenced_column` IS NULL AND `{$join_table}_{$rand}`.`$join_column` IS NULL))";
 	}
 
+	public function orderby($order = null)
+	{
+		if ($order) $this->stack['orderby']=$order;
+	}
+
 	public function checkInsert($cols, $arr, $cols2, $arr2, \mysqli $conn)
 	{
 		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
@@ -242,14 +247,21 @@ class Table {
 					$sql.=$this->stack['selects'][$sel]." AS `$sel`,";
 				}
 			}
-			$sql=rtrim($sql,',').' ';
+			$sql=rtrim($sql,',')."\n";
+
+			//FROM
+			$sql.="FROM {$this->name} _ref_{$this->name}_ref\n";
 
 			//JOIN
-			$sql.="\nFROM {$this->name} _ref_{$this->name}_ref\n".(isset($this->stack['join'])?implode("\n",$this->stack['join']):'');
+			$sql.=(isset($this->stack['join'])?implode("\n",$this->stack['join'])."\n":'');
 
 			//WHERE
-			if(isset($this->stack['whereSQL'])) $sql.=" WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL']);
-			$sql = $sql.($limit ? " LIMIT $limit" : "");
+			if(isset($this->stack['whereSQL'])) $sql.="WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL'])."\n";
+
+			//ORDERBY
+			if(isset($this->stack['orderby'])) $sql.="ORDER BY ".$this->stack['porderby']."\n";
+
+			$sql = $sql.($limit ? "LIMIT $limit\n" : "");
 			if ($this->readonly) {
 				echo "<h2><pre>$sql</pre></h2>";
 				return;
