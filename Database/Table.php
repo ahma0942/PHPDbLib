@@ -259,7 +259,7 @@ class Table {
 			if(isset($this->stack['whereSQL'])) $sql.="WHERE ".$this->_create_nested_where_sql($this->stack['whereSQL'])."\n";
 
 			//ORDERBY
-			if(isset($this->stack['orderby'])) $sql.="ORDER BY ".$this->stack['porderby']."\n";
+			if(isset($this->stack['orderby'])) $sql.="ORDER BY ".$this->stack['orderby']."\n";
 
 			$sql = $sql.($limit ? "LIMIT $limit\n" : "");
 			if ($this->readonly) {
