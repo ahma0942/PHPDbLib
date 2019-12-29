@@ -68,6 +68,8 @@ class TableActions {
 
     public function insert($cols=[], $arr=[])
     {
+        if (!empty($cols) && empty($arr) && is_array($cols[0]))
+            return $this->tables[$this->table]->insert(array_shift($cols), $cols, $this->connection);
         return $this->tables[$this->table]->insert($cols, $arr, $this->connection);
     }
 
