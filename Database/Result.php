@@ -27,7 +27,7 @@ class Result implements \ArrayAccess {
         $sql = "UPDATE `{$this->table->name}`";
         $sql .= "\nSET";
         foreach($this->data AS $k=>$v) {
-            if($v instanceof \ArrayAccess) $v = $v['id'];
+            if($v instanceof \ArrayAccess) continue;
             if(gettype($v) == 'NULL') $v = "NULL";
             else $v = "'".mysqli_real_escape_string($this->conn, $v)."'";
             $sql .= "\n\t`$k`=$v,";
