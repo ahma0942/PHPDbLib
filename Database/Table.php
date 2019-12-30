@@ -97,7 +97,7 @@ class Table {
 					$arr=array_shift($opt);
 				} else $opt=[];
 				if(!isset($this->keys[$arr])) throw new \Exception("No foreign key reference found for column '$arr'");
-				if($this->keys[$arr][0] === false) throw new \Exception("Reference for '$arr' is too ambitious. Use the following:\n".$this->keys[$arr][0]."\n".$this->keys[$arr][1]);
+				if($this->keys[$arr][0] === false) throw new \Exception("Reference for '$arr' is too ambitious. Use the following:\n".$this->keys[$arr][1]."\n".$this->keys[$arr][2]);
 				$tarr=explode('.',$arr);
 				$joined_table=null;
 				if(!isset($this->keys[$tarr[0]])) $tarr[0]=$arr;
@@ -131,17 +131,20 @@ class Table {
 					$t=array_shift($opt);
 				} else $opt=[];
 				if(!isset($tab->keys[$t])) throw new \Exception("No foreign key reference found for column '$t'");
-				if($tab->keys[$t][0] === false) throw new \Exception("Reference for '$t' is too ambitious. Use the following:\n".$tab->keys[$t][0]."\n".$tab->keys[$t][1]);
-				$tt=explode('.',$t);
-				$joined_table=null;
-				if(!isset($tab->keys[$tt[0]])) $tt[0]=$t;
-				if(strpos($t,'.')!==false) $joined_table=explode('.',$t)[1];
-				$select[]=$tt[0];
-				$this->_create_select_array([$tt[0]=>$rand],$tab,implode('.',$select),$joined_table);
+				if($tab->keys[$t][0] === false) throw new \Exception("Reference for '$t' is too ambitious. Use the following:\n".$tab->keys[$t][1]."\n".$tab->keys[$t][2]);
+				if(strpos($t,'.')!==false) {
+					$t=explode('.',$t);
+					$joined_table=$t[1];
+					$select[]=$t[1];
+				} else {
+					$joined_table=null;
+					$select[]=$tab->keys[$t][1];
+				}
+				$this->_create_select_array([(is_array($t) ? $t[0] : $t)=>$rand],$tab,implode('.',$select),$joined_table);
 				unset($this->stack['selects'][implode('.',$select)]);
-				$this->_create_inner_join_sql($last,$tt[0],$tab->keys[$t][1],$tab->keys[$t][2],$rand,in_array('NULL',$opt)?true:false,in_array('LEFT',$opt)?true:false);
-				$last=$tab->keys[$t][1].'_'.$rand;
-				$tab=$tab->tables[$tab->keys[$t][1]];
+				$this->_create_inner_join_sql($last,(is_array($t) ? $t[0] : $t), $tab->keys[(is_array($t) ? implode('.', $t) : $t)][1], $tab->keys[(is_array($t) ? implode('.', $t) : $t)][2],$rand,in_array('NULL',$opt)?true:false,in_array('LEFT',$opt)?true:false);
+				$last=$tab->keys[(is_array($t) ? implode('.', $t) : $t)][1].'_'.$rand;
+				$tab=$tab->tables[$tab->keys[(is_array($t) ? implode('.', $t) : $t)][1]];
 			}
 		}
 	}
@@ -166,6 +169,7 @@ class Table {
 		foreach($class->columns as $col){
 			if(!$doneThisBefore && !isset($arr[$col]) && $class->name==$this->name) $this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 			elseif(isset($arr[$col])){
+				$this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 				$t=$table ? $table : $class->keys[$col][1];
 				foreach($this->tables[$t]->columns as $cols) {
 					$this->stack['selects'][($prefix!=""?$prefix:$col).'.'.$cols]='`'.$t.'_'.$arr[$col].'`.`'.$cols.'`';
@@ -231,7 +235,7 @@ class Table {
 			$this->stack['_selects']=$this->stack['selects'];
 
 			//SELECT
-			$sql="SELECT ";
+			$sql="SELECT";
 			if(!isset($this->stack['select']) || empty($this->stack['select'])){
 				if(isset($this->stack['unselect']) && !empty($this->stack['unselect'])){
 					foreach($this->stack['unselect'] as $sel) {
@@ -239,12 +243,11 @@ class Table {
 						unset($this->stack['selects'][$sel]);
 					}
 				}
-				foreach($this->stack['selects'] as $val=>$key) $sql.="$key AS `$val`,";
-			}
-			else{
+				foreach($this->stack['selects'] as $val=>$key) $sql.="\n  $key AS `$val`,";
+			} else {
 				foreach($this->stack['select'] as $sel) {
 					if(!isset($this->stack['selects'][$sel])) throw new \Exception("Cannot select column '$sel'. Column not found.");
-					$sql.=$this->stack['selects'][$sel]." AS `$sel`,";
+					$sql.="\n  ".$this->stack['selects'][$sel]." AS `$sel`,";
 				}
 			}
 			$sql=rtrim($sql,',')."\n";
@@ -288,7 +291,7 @@ class Table {
 					if(strpos($k,'.')!==false){
 						$keys=explode('.',$k);
 						$main=array_shift($keys);
-						if(!isset($output[$i][$main])) $output[$i][$main] = new Result($this->keys[$main][1], $this->columns, $this->keys, $conn);
+						if(!isset($output[$i][$main])) $output[$i][$main] = new Result($this->keys[$keys[0]][1], $this->columns, $this->keys, $conn);
 						$t=&$output[$i][$main];
 						foreach($keys as $key) $t=&$t[$key];
 						$t=$v;
