@@ -169,7 +169,8 @@ class Table {
 		foreach($class->columns as $col){
 			if(!$doneThisBefore && !isset($arr[$col]) && $class->name==$this->name) $this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 			elseif(isset($arr[$col])){
-				$this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
+				if (strpos($prefix,'.')===false && strpos($col,'.')===false)
+					$this->stack['selects'][$col]='`_ref_'.$this->name.'_ref`.`'.$col.'`';
 				$t=$table ? $table : $class->keys[$col][1];
 				foreach($this->tables[$t]->columns as $cols) {
 					$this->stack['selects'][($prefix!=""?$prefix:$col).'.'.$cols]='`'.$t.'_'.$arr[$col].'`.`'.$cols.'`';
@@ -271,6 +272,7 @@ class Table {
 			}
 			if(isset($this->stack['where'])){
 				$table=$conn->prepare($sql);
+				if ($conn->error) die($conn->error);
 				$types=['integer'=>'i','double'=>'d','string'=>'s','NULL'=>'s'];
 				$bind=[''];
 				for($i=0; $i<count($this->stack['where']); $i++){
@@ -282,6 +284,7 @@ class Table {
 				$table=$table->get_result();
 			}
 			else $table=$conn->query($sql);
+			if ($conn->error) die($conn->error);
 
 			$i=-1;
 			while($row=$table->fetch_assoc()){
