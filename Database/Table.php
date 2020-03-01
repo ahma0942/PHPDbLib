@@ -294,7 +294,7 @@ class Table {
 					if(strpos($k,'.')!==false){
 						$keys=explode('.',$k);
 						$main=array_shift($keys);
-						if(!isset($output[$i][$main])) $output[$i][$main] = new Result($this->keys[$keys[0]][1], $this->columns, $this->keys, $conn);
+						if(!isset($output[$i][$main]) || !($output[$i][$main] instanceof Result)) $output[$i][$main] = new Result($this->keys[$main][1], $this->columns, $this->keys, $conn);
 						$t=&$output[$i][$main];
 						foreach($keys as $key) $t=&$t[$key];
 						$t=$v;
