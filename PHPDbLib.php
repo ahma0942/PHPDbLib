@@ -11,11 +11,30 @@ class PHPDbLib {
 	private $d;
 	private $readonly;
 
-	function __construct(array $config, $dbname, $readonly = false)
+	function __construct(array $config, $dbname = false, $readonly = false)
 	{
 		$this->readonly = $readonly;
-	    $this->db=$dbname;
-		$this->connection = new mysqli($config['host'],$config['user'],$config['pass'],$dbname);
+		$this->connection = new mysqli($config['host'],$config['user'],$config['pass']);
+		if ($dbname) $this->initDB($dbname);
+	}
+
+	function __destruct()
+	{
+		$this->connection->close();
+	}
+
+	public function reset()
+	{
+		$dir = new DirectoryIterator(dirname(__FILE__).'/#db');
+		foreach ($dir as $fileinfo)
+			if (!in_array($fileinfo->getFilename(), ['.htaccess','.','..']))
+				unlink(dirname(__FILE__).'/#db/'.$fileinfo->getFilename());
+	}
+
+	public function initDB($dbname)
+	{
+		$this->db=$dbname;
+		$this->connection->select_db($dbname);
 		if(!file_exists(__DIR__.'/#db')) {
 			mkdir(__DIR__.'/#db');
 			file_put_contents(__DIR__.'/#db/.htaccess','Deny from  all');
@@ -30,9 +49,9 @@ class PHPDbLib {
 		$this->d = new DatabaseActions($this->tables, $this->connection, $this->db);
 	}
 
-	function __destruct()
+	private function isDbInit()
 	{
-		$this->connection->close();
+		if (!$this->db) die('Database not Initialized');
 	}
 
 	public function conn()
@@ -40,50 +59,64 @@ class PHPDbLib {
 		return $this->connection;
 	}
 
+	public function exec($sql)
+	{
+		return $this->connection->query($sql);
+	}
+
 	public function create($table, $callable)
 	{
+		$this->isDbInit();
 		$this->tables = $this->d->create($table, $callable);
 		return $this;
 	}
 
 	public function readonly($readonly = true)
 	{
+		$this->isDbInit();
 		$this->d->readonly($readonly);
 		return $this;
 	}
 
 	public function delete($table)
 	{
+		$this->isDbInit();
 		return $this->d->delete($table);
 	}
 
 	public function update()
 	{
+		$this->isDbInit();
 		return $this->d->update();
 	}
 
 	public function read()
 	{
+		$this->isDbInit();
 		return $this->d->read();
 	}
 
 	public function execute()
 	{
+		$this->isDbInit();
 		return $this->d->execute();
 	}
 
 	public function exist($table)
     {
+		$this->isDbInit();
         return isset($this->tables[$table]);
     }
 
     public function table($table)
     {
+		$this->isDbInit();
 		return new TableActions($table,$this->tables,$this->connection,$this->db);
     }
 
 	public function CreateObjectFromDatabase(): array
 	{
+		$this->isDbInit();
 		$orm=[];
 		$res=$this->conn()->query("SHOW TABLES FROM `$this->db`")->fetch_all();
 
