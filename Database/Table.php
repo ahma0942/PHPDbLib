@@ -194,12 +194,12 @@ class Table {
 	{
 		$sql = "INSERT INTO `".$this->name."`(`".implode('`,`', $cols)."`)\n";
 		$sql .= "SELECT *  FROM (SELECT ";
-		foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+		foreach($arr AS $val) $sql .= $this->escape($val, $conn).',';
 		$sql = rtrim($sql,',').") AS tmp\n";
 		$sql .= "WHERE NOT EXISTS (\n\t";
 		$sql .= "SELECT id FROM `".$this->name."` WHERE ";
 		$len = count($cols2);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".mysqli_real_escape_string($conn, $arr2[$i])."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".$this->escape($arr2[$i], $conn)."' AND ";
 		$sql = substr($sql, 0, -5)."\n) LIMIT 1;";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn);
@@ -209,7 +209,7 @@ class Table {
 	{
 		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
 		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".$this->escape($arr[$i], $conn)."' AND ";
 		$sql = substr($sql, 0, -5)."LIMIT 1;";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn) > 0 ? true : false;
@@ -219,7 +219,7 @@ class Table {
 	{
 		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
 		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".mysqli_real_escape_string($conn, $arr[$i])."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".$this->escape($arr[$i], $conn)."' AND ";
 		$sql = substr($sql, 0, -5).";";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn);
@@ -310,6 +310,11 @@ class Table {
 		return new Result($this->name, $this->columns, $this->keys, $conn, $output);
 	}
 
+	public function escape($val, \mysqli $conn)
+	{
+		return gettype($val) == 'NULL' ? 'null' : "'".mysqli_real_escape_string($conn, $val)."'";
+	}
+
 	public function insert($cols=[], $arr=[], \mysqli $conn)
 	{
 		$sql = "INSERT INTO `".$this->name."`".(empty($cols) ? " " : "(`".implode('`,`', $cols)."`)\n");
@@ -318,14 +323,14 @@ class Table {
 			if (is_array($arr[0])) {
 				for($i = 0; $i < count($arr); $i++) {
 					$sql .= "(";
-					foreach($arr[$i] AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+					foreach($arr[$i] AS $val) $sql .= $this->escape($val, $conn).',';
 					$sql = rtrim($sql,',').")";
 					if ($i == count($arr)-1) $sql .= ";\n";
 					else $sql .= ",\n";
 				}
 			} else {
 				$sql .= "(";
-				foreach($arr AS $val) $sql .= "'".mysqli_real_escape_string($conn, $val)."',";
+				foreach($arr AS $val) $sql .= $this->escape($val, $conn).',';
 				$sql = rtrim($sql,',').");\n";
 			}
 		} else $sql.="();";
