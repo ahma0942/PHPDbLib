@@ -199,7 +199,7 @@ class Table {
 		$sql .= "WHERE NOT EXISTS (\n\t";
 		$sql .= "SELECT id FROM `".$this->name."` WHERE ";
 		$len = count($cols2);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`='".$this->escape($arr2[$i], $conn)."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols2[$i]."`=".$this->escape($arr2[$i], $conn)." AND ";
 		$sql = substr($sql, 0, -5)."\n) LIMIT 1;";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn);
@@ -209,7 +209,7 @@ class Table {
 	{
 		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
 		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".$this->escape($arr[$i], $conn)."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`=".$this->escape($arr[$i], $conn)." AND ";
 		$sql = substr($sql, 0, -5)."LIMIT 1;";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn) > 0 ? true : false;
@@ -219,7 +219,7 @@ class Table {
 	{
 		$sql = "SELECT 1 FROM `".$this->name."` WHERE ";
 		$len = count($cols);
-		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`='".$this->escape($arr[$i], $conn)."' AND ";
+		for($i = 0; $i<$len; $i++) $sql .= "`".$cols[$i]."`=".$this->escape($arr[$i], $conn)." AND ";
 		$sql = substr($sql, 0, -5).";";
 		$this->execute($sql, $conn);
 		return mysqli_affected_rows($conn);
