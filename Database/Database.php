@@ -128,7 +128,7 @@ class Database {
 
 	public function execute()
 	{
-        if ($this->readonly) echo "<h3><pre>".$this->sql."</pre></h3>";
+        if ($this->readonly) echo $this->sql;
         else {
             $this->connection->query($this->sql);
             if($this->connection->error) throw new \Exception($this->connection->error);

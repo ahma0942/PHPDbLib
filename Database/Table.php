@@ -315,7 +315,7 @@ class Table {
 		return gettype($val) == 'NULL' ? 'null' : "'".mysqli_real_escape_string($conn, $val)."'";
 	}
 
-	public function insert($cols=[], $arr=[], \mysqli $conn)
+	public function insert($cols, $arr, \mysqli $conn)
 	{
 		$sql = "INSERT INTO `".$this->name."`".(empty($cols) ? " " : "(`".implode('`,`', $cols)."`)\n");
 		$sql .= "VALUES ";
